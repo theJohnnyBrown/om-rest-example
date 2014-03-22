@@ -7,8 +7,8 @@
 (enable-console-print!)
 
 
-;; in practice we probably want separate cljsbuild builds for node and browser
-;; browser-main and node-main should be in separate namespaces which are only
+;; in practice we probably want separate cljsbuild builds for node and browser,
+;; in separate namespaces which are only
 ;; compiled for the appropriate environment
 
 (defn browser-main []
@@ -23,8 +23,5 @@
    js/React
    (om/build contacts-view @app-state)))
 
-;; (defn node-main []
-;;  (.log
-;;   js/console (template-string)))
-
+;; prevents a nullPointerException type situation
 (set! *main-cli-fn* (fn [] nil))

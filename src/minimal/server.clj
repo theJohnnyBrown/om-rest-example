@@ -32,12 +32,17 @@
 
 (defroutes routes
   (GET "/" []
-       (str "<html><head><title>minimal react cljx</title></head>"
+       (str "<html><head>"
+            "<title>minimal react cljx</title></head>"
+            "<body id=\"app0\">"
             (views/template-string @app-state)
-            "</html>"))
+            "<script src=\"/js/app-dev.js\"></script> "
+            "</body></html>"))
   (GET "/*" [] (static-directory "public/"))
   (not-found "Resource not found"))
 
 (def app
   (-> routes
       (handler/site)))
+
+(views/template-string @app-state)

@@ -22,7 +22,7 @@
 
   :ring {
     :handler minimal.server/app
-  }
+    :nrepl {:start? true :port 4555}}
 
   :resource-paths ["public" "html"]
 
@@ -48,5 +48,21 @@
                 :output-to "main.js"
                 :optimizations :simple
                 :pretty-print true
-                :preamble ["minimal/fake_document.js"]
+                :preamble ["minimal/react_preamble.js"]
+                :externs ["react/externs/react.js"]}}
+             {:id "browser-dev"
+              :source-paths ["src"]
+              :compiler {
+                :output-to "public/js/app-dev.js"
+                :optimizations :simple
+                :pretty-print true
+                :preamble ["react/react.min.js"]
+                :externs ["react/externs/react.js"]}}
+             {:id "browser"
+              :source-paths ["src"]
+              :compiler {
+                :output-to "public/js/app.js"
+                :optimizations :advanced
+                :pretty-print true
+                :preamble ["react/react.min.js"]
                 :externs ["react/externs/react.js"]}}]})
