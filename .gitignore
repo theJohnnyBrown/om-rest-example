@@ -7,3 +7,7 @@ pom.xml
 .lein-deps-sum
 .lein-repl-history
 .lein-plugins/
+node_modules
+src/minimal/views.clj*
+src/minimal/data.clj*
+main.js
