@@ -46,25 +46,28 @@
           (om/build-all contact-view (:contacts app)
             {:init-state {:delete delete}}))))))
 
+#+clj
+(defn js-calling-code [fn-name args]
+  (str
+   "console.log("
+   fn-name "("
+   "cljs.core.js__GT_clj(" (generate-string args) ","
+   "new cljs.core.Keyword(null,  \"keywordize-keys\", \"keywordize-keys\"),"
+   "true"
+   ")));"))
+
+#+clj
+(defn node-call-fn [fn-name args]
+ (sh "node"
+     :in (str (str/replace (slurp "main.js") "#!/usr/bin/env node" "") ";\n"
+              (js-calling-code fn-name args))))
+
 (defn template-string [state]
   #+cljs
   (.renderComponentToString
    js/React
    (om/build contacts-view state))
   #+clj
-  (:out (sh "node"
-          :in (str (str/replace (slurp "main.js") "#!/usr/bin/env node" "")
-                   ";\n" "console.log(minimal.core.template_string("
-                   "cljs.core.js__GT_clj(" (generate-string state) ","
-                   "new cljs.core.Keyword(null,  \"keywordize-keys\", \"keywordize-keys\")"
-                   ")));"))))
-
-#+cljs
-(defn setup-app []
- (om/root contacts-view app-state
-  {:target (.getElementById js/document "app0")}))
-
-
-;; only run in browser
-#+cljs
-(if (exists? js/document) (setup-app))
+  (let [{:keys [out err exit]}
+        (node-call-fn "minimal.views.template_string" state)]
+    (if (= 0 exit) out (throw (Exception. err)))))

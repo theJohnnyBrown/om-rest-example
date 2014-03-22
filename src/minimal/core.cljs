@@ -18,10 +18,16 @@
    app-state
    {:target (. js/document (getElementById "app"))}))
 
-(defn template-string []
- (.renderComponentToString
-   js/React
-   (om/build contacts-view @app-state)))
+(defn setup-app []
+ (om/root contacts-view app-state
+  {:target (.getElementById js/document "app0")}))
 
-;; prevents a nullPointerException type situation
+;; only run in browser
+(if (exists? js/document)
+  (do
+    (.log js/console "starting app")
+    (setup-app)))
+
+
+;; prevents a nullPointerException type situation when running on node
 (set! *main-cli-fn* (fn [] nil))
