@@ -11,12 +11,6 @@
 ;; in separate namespaces which are only
 ;; compiled for the appropriate environment
 
-(defn browser-main []
-  (om/root
-   (fn [app owner]
-     (dom/h1 nil (:text app)))
-   app-state
-   {:target (. js/document (getElementById "app"))}))
 
 (defn setup-app []
  (om/root contacts-view app-state
@@ -30,4 +24,4 @@
 
 
 ;; prevents a nullPointerException type situation when running on node
-(set! *main-cli-fn* (fn [] nil))
+;; (set! *main-cli-fn* (fn [] nil))

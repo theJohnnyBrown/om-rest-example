@@ -36,13 +36,14 @@
   :hooks [cljx.hooks]
 
   :node-dependencies [[react "0.9.0"]
-                      [domino "1.0.15"]]
+                      [domino "1.0.15"]
+                      [express "3.4.8"]]
 
   :source-paths ["src"]
 
   :cljsbuild {
     :builds [{:id "node"
-              :source-paths ["src"]
+              :source-paths ["src" "src-node"]
               :compiler {
                 :target :nodejs
                 :output-to "main.js"
