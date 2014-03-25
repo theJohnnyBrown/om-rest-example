@@ -5,8 +5,7 @@
             #+clj [cheshire.core :refer [generate-string]]
             #+cljs [om.core :as om :include-macros true]
             #+cljs [om.dom :as dom :include-macros true]
-            #+cljs [cljs.core.async :refer [put! chan <!]]
-            [minimal.data :refer [app-state]]))
+            #+cljs [cljs.core.async :refer [put! chan <!]]))
 
 (defn parse-contact [contact-str]
   (let [[first middle last :as parts] (str/split contact-str #"\s+")
