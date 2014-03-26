@@ -10,3 +10,9 @@
       {:first "Cy" :middle-initial "D" :last "Effect" :email "bugs@mit.edu"}
       {:first "Lem" :middle-initial "E" :last "Tweakit" :email "morebugs@mit.edu"}]
      :message "wurdz"}))
+
+(defn get-contact [params]
+  (->> @app-state
+       :contacts
+       (filter #(= (merge % params) %))
+       first))

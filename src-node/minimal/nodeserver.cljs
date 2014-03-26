@@ -1,7 +1,9 @@
 (ns minimal.nodeserver
   (:require [cljs.nodejs :as nodejs]
             [minimal.views :as views]
-            [minimal.data :refer [app-state]]))
+            [minimal.data :refer [app-state]]
+            [minimal.routes :as routes]
+            [secretary.core :as secretary]))
 
 ; Node.js dirname
 (def __dirname (js* "__dirname"))
@@ -21,17 +23,23 @@
 
 
 
-(.get app "/" #(.send %2
-                      (str "<html><head>"
-                           "<title>minimal react cljx</title></head>"
-                           "<body id=\"app0\">"
-                           (views/template-string @app-state)
-                           "<script src=\"/js/app-dev.js\"></script> "
-                           "</body></html>")))
+(.get app "*" (fn [req res next]
+                (.log js/console (.-url req))
+                (.log js/console (.-token req))
+                (.log js/console
+                      (str (:state (secretary/dispatch! (.-url req)))))
+                (.send res
+                       (str "<html><head>"
+                            "<title>minimal react cljx</title></head>"
+                            "<body id=\"app0\">"
+                            (let [{:keys [template state]}
+                                  (secretary/dispatch! (.-url req))]
+                              (views/template-string state template))
+                            "<script src=\"/js/app-dev.js\"></script> "
+                            "</body></html>"))))
 
-(.get app "*" #(.send %2 (views/layout-render views/four-oh-four "404") 404))
+;; (.get app "*" #(.send %2 (views/layout-render views/four-oh-four "404") 404))
 
-(defn -main [& args]
-  (.listen app port))
+(defn -main [& args] (.listen app port))
 
 (set! *main-cli-fn* -main)

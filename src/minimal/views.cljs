@@ -1,11 +1,9 @@
 (ns minimal.views
-  #+cljs  (:require-macros [cljs.core.async.macros :refer [go]])
+  (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [clojure.string :as str]
-            #+clj [clojure.java.shell :refer [sh]]
-            #+clj [cheshire.core :refer [generate-string]]
-            #+cljs [om.core :as om :include-macros true]
-            #+cljs [om.dom :as dom :include-macros true]
-            #+cljs [cljs.core.async :refer [put! chan <!]]))
+            [om.core :as om :include-macros true]
+            [om.dom :as dom :include-macros true]
+            [cljs.core.async :refer [put! chan <!]]))
 
 (defn parse-contact [contact-str]
   (let [[first middle last :as parts] (str/split contact-str #"\s+")
@@ -17,13 +15,14 @@
         (== c 1) (assoc :middle-initial middle)
         (>= c 2) (assoc :middle middle)))))
 
-#+cljs
 (defn contact-view [contact owner]
   (reify
     om/IRenderState
     (render-state [this {:keys [delete]}]
       (dom/li nil
-              (dom/span nil (:first contact))
+              (dom/a #js {:class "client-loadable"
+                          :href (str "/contact/" (:first contact) "/")}
+                     (:first contact))
               (dom/button
                #js {:onClick
                     (fn [e]
@@ -32,7 +31,31 @@
                         (put! delete @contact)))}
                "Delete")))))
 
-#+cljs
+(defn single-contact-view* [contact owner]
+  (reify
+    om/IRenderState
+    (render-state [this {:keys [delete]}]
+      (dom/p nil
+              (dom/h1 nil (str (:first contact) (:last contact)))
+              (dom/h3 nil (:email contact))
+              (dom/button
+               #js {:onClick
+                    (fn [e]
+                      (do
+                        (js/alert "delete!")
+                        (put! delete @contact)))}
+               "Delete")))))
+
+(defn single-contact-view [contact owner]
+  (reify
+    om/IInitState
+    (init-state [_]
+      {:delete (chan)})
+    om/IRenderState
+    (render-state [this {:keys [delete] :as state}]
+      (dom/div nil
+        (om/build single-contact-view* contact)))))
+
 (defn add-contact [e owner app]
   (let [new-contact (-> (om/get-node owner "new-contact")
                         .-value
@@ -42,11 +65,11 @@
        (om/transact! app :contacts #(conj % new-contact))
        (om/set-state! owner :text "")))))
 
-#+cljs
+
 (defn handle-change [e owner {:keys [text]}]
   (om/set-state! owner :text (.. e -target -value)))
 
-#+cljs
+
 (defn contacts-view [app owner]
   (reify
     om/IInitState
@@ -72,29 +95,7 @@
                           :onChange #(handle-change % owner state)})
           (dom/button #js {:onClick #(add-contact % owner app)} "Add contact"))))))
 
-
-#+clj
-(defn js-calling-code [fn-name args]
-  (str
-   "console.log("
-   fn-name "("
-   "cljs.core.js__GT_clj(" (generate-string args) ","
-   "new cljs.core.Keyword(null,  \"keywordize-keys\", \"keywordize-keys\"),"
-   "true"
-   ")));"))
-
-#+clj
-(defn node-call-fn [fn-name args]
- (sh "node"
-     :in (str (str/replace (slurp "main.js") "#!/usr/bin/env node" "") ";\n"
-              (js-calling-code fn-name args))))
-
-(defn template-string [state]
-  #+cljs
+(defn template-string [state component]
   (.renderComponentToString
    js/React
-   (om/build contacts-view state))
-  #+clj
-  (let [{:keys [out err exit]}
-        (node-call-fn "minimal.views.template_string" state)]
-    (if (= 0 exit) out (throw (Exception. err)))))
+   (om/build component state)))

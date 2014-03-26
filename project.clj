@@ -13,7 +13,8 @@
 
                  [org.clojure/clojurescript "0.0-2156"]
                  [org.clojure/core.async "0.1.267.0-0d7780-alpha"]
-                 [om "0.5.0"]]
+                 [om "0.5.0"]
+                 [secretary "1.1.0"]]
 
   :plugins [[lein-npm "0.3.2"]
             [lein-cljsbuild "1.0.2"]
