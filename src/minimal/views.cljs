@@ -20,7 +20,7 @@
     om/IRenderState
     (render-state [this {:keys [delete]}]
       (dom/li nil
-              (dom/a #js {:class "client-loadable"
+              (dom/a #js {:className "client-loadable"
                           :href (str "/contact/" (:first contact) "/")}
                      (:first contact))
               (dom/button
