@@ -80,26 +80,17 @@
 
 (defn single-contact-view* [contact owner]
   (reify
-    om/IRenderState
-    (render-state [this {:keys [delete]}]
+    om/IRender
+    (render [this]
       (dom/p nil
               (dom/h1 nil (str (:first contact) " " (:last contact)))
               (dom/h3 nil (:email contact))
-              (dom/button
-               #js {:onClick
-                    (fn [e]
-                      (do
-                        (js/alert "delete!")
-                        (put! delete @contact)))}
-               "Delete")))))
+              (dom/a #js {:href "/" :onClick client-load!} "all contacts")))))
 
 (defn single-contact-view [contact owner]
   (reify
-    om/IInitState
-    (init-state [_]
-      {:delete (chan)})
-    om/IRenderState
-    (render-state [this {:keys [delete] :as state}]
+    om/IRender
+    (render [this]
       (dom/div nil
         (om/build single-contact-view* contact)))))
 
