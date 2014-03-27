@@ -9,7 +9,7 @@
 (defroute "/" []
   (do
     (.log js/console "index route")
-    {:state @app-state :template contacts-view}))
+    {:state app-state :template contacts-view}))
 
 (defroute "/contact/:name/" [name]
   (do

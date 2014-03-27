@@ -3,7 +3,53 @@
   (:require [clojure.string :as str]
             [om.core :as om :include-macros true]
             [om.dom :as dom :include-macros true]
-            [cljs.core.async :refer [put! chan <!]]))
+            [cljs.core.async :refer [put! chan <!]]
+
+            [secretary.core :as secretary])
+  (:import goog.history.Html5History
+           goog.history.EventType
+           goog.Uri))
+
+;; formerly core
+(def browser? (exists? js/document))
+
+(enable-console-print!)
+
+(if browser?
+ (extend-type js/NodeList
+   ISeqable
+   (-seq [array] (array-seq array 0))))
+
+(def hist (if browser?
+           (doto (Html5History.) (.setUseFragment false) (.setEnabled true))))
+
+(defn strip-leading-slash [s] (if (= (str (first s)) "/")
+                               (str/join (rest s)) s))
+
+(defn render-root [component state target]
+  (om/root component state {:target target})
+  ;; setup navigation. See http://closure-library.googlecode.com/git-history/6b23d1e05147f2e80b0d619c5ff78319ab59fd10/closure/goog/demos/html5history.html
+  (goog.events/listen ;; when token changes, update view
+   hist EventType/NAVIGATE
+   #(let [{new-template :template new-state :state}
+          (secretary/dispatch! (str "/" (.-token %)))]
+      (.log js/console (str "token set to " (.-token %)))
+      (render-root
+       new-template new-state
+       (.getElementById js/document "app0")))))
+
+(defn setup-app [component state]
+  (do
+    (render-root component state (.getElementById js/document "app0"))))
+
+(defn client-load! [e] ;; e should be the click event of an <a>
+  (do
+    (.setToken hist
+               (-> e .-target (.getAttribute "href") strip-leading-slash)
+               (-> e .-target .-title))
+    (.preventDefault e)))
+
+;; end formerly core
 
 (defn parse-contact [contact-str]
   (let [[first middle last :as parts] (str/split contact-str #"\s+")
@@ -21,7 +67,8 @@
     (render-state [this {:keys [delete]}]
       (dom/li nil
               (dom/a #js {:className "client-loadable"
-                          :href (str "/contact/" (:first contact) "/")}
+                          :href (str "/contact/" (:first contact) "/")
+                          :onClick client-load!}
                      (:first contact))
               (dom/button
                #js {:onClick
@@ -36,7 +83,7 @@
     om/IRenderState
     (render-state [this {:keys [delete]}]
       (dom/p nil
-              (dom/h1 nil (str (:first contact) (:last contact)))
+              (dom/h1 nil (str (:first contact) " " (:last contact)))
               (dom/h3 nil (:email contact))
               (dom/button
                #js {:onClick
