@@ -3,28 +3,28 @@
   (:require [cljs.core.async :as async :refer [put! chan alts!]]
             [om.core :as om :include-macros true]
             [om.dom :as dom :include-macros true]
-            [om-sync.util :refer [edn-xhr popn sub tx-tag subpath? error?]]))
+            [om-sync.util :refer [json-xhr popn sub tx-tag subpath? error?]]))
 
 (def ^:private type->method
   {:create :post
    :update :put
    :delete :delete})
 
-(defn ^:private sync-server [url tag edn]
+(defn ^:private sync-server [url tag data]
   (let [res-chan (chan)]
-    (edn-xhr
+    (json-xhr
       {:method (type->method tag)
        :url url
-       :data edn
+       :data data
        :on-error (fn [err] (put! res-chan err))
        :on-complete (fn [res] (put! res-chan res))})
     res-chan))
 
-(defn ^:private tag-and-edn [coll-path path tag-fn id-key tx-data]
+(defn ^:private tag-and-data [coll-path path tag-fn id-key tx-data]
   (let [tag (if-not (nil? tag-fn)
               (tag-fn tx-data)
               (tx-tag tx-data))
-        edn (condp = tag
+        data (condp = tag
               :create (:new-value tx-data)
               :update (let [ppath (popn (- (count path) (inc (count coll-path))) path)
                             m (select-keys (get-in (:new-state tx-data) ppath) [id-key])
@@ -32,12 +32,12 @@
                         (assoc-in m (rest rel) (:new-value tx-data)))
               :delete (-> tx-data :old-value id-key)
               nil)]
-    [tag edn]))
+    [tag data]))
 
 (defn om-sync
   "ALPHA: Creates a reusable sync componet. Data must be a map containing
   :url and :coll keys. :url must identify a server endpoint that can
-  takes EDN data via POST for create, PUT for update, and DELETE for
+  takes JSON data via POST for create, PUT for update, and DELETE for
   delete. :coll must be a cursor into the application state. Note the
   first argument could of course just be a cursor itself.
 
@@ -75,7 +75,7 @@
 
   :sync-chan - if given this option, om-sync will not invoke
     sync-server instead it will put a map containing the :listen-path,
-    :url, :tag, :edn, :on-success, :on-error, and :tx-data on the
+    :url, :tag, :data, :on-success, :on-error, and :tx-data on the
     provided channel. This higher level operations such as server
     request batching and multiple om-sync component coordination."
   ([data owner] (om-sync data owner nil))
@@ -104,16 +104,17 @@
                     (let [[{:keys [path new-value new-state] :as tx-data} _] v]
                       (when (and (subpath? coll-path path)
                               (or (nil? filter) (filter tx-data)))
-                        (let [[tag edn] (tag-and-edn coll-path path tag-fn id-key tx-data)
+                        (let [[tag data] (tag-and-data
+                                         coll-path path tag-fn id-key tx-data)
                               tx-data (assoc tx-data ::tag tag)]
                           (if-not (nil? sync-chan)
                             (>! sync-chan
-                              {:url url :tag tag :edn edn
+                              {:url url :tag tag :data data
                                :listen-path coll-path
                                :on-success on-success
                                :on-error on-error
                                :tx-data tx-data})
-                            (let [res (<! (sync-server url tag edn))]
+                            (let [res (<! (sync-server url tag data))]
                               (if (error? res)
                                 (on-error res tx-data)
                                 (on-success res tx-data))))))
