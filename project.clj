@@ -1,6 +1,9 @@
 (defproject minimal "0.1.0-SNAPSHOT"
-  :description "FIXME: write this!"
-  :url "http://example.com/FIXME"
+  :description "An example of DRY client+server templating and routing,
+                using om and secretary"
+  :url "https://github.com/theJohnnyBrown/om-rest-example"
+  :license {:name "Eclipse Public License - v 1.0"
+            :url "http://www.eclipse.org/legal/epl-v10.html"}
 
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [cheshire "5.3.1"]
