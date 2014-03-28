@@ -3,17 +3,19 @@
   (:require [clojure.string :as str]
             [om.core :as om :include-macros true]
             [om.dom :as dom :include-macros true]
-            [cljs.core.async :refer [put! chan <!]]
+            [cljs.core.async :refer [put! chan <!] :as async]
+            [minimal.util :refer [browser?]]
+
+            ;; this refers to a fork of om-sync.util
+            [om-sync.util :refer [tx-tag json-xhr]]
 
             [secretary.core :as secretary])
   (:import goog.history.Html5History
            goog.history.EventType
            goog.Uri))
 
-;; formerly core
-(def browser? (exists? js/document))
-
 (enable-console-print!)
+;; formerly core
 
 (if browser?
  (extend-type js/NodeList
@@ -26,8 +28,27 @@
 (defn strip-leading-slash [s] (if (= (str (first s)) "/")
                                (str/join (rest s)) s))
 
+(def operation-methods {:create :post :update :put :delete :delete})
+(defn operation-url [object operation path]
+  (let [slash-joined #(str "/" (str/join "/" %) "/")]
+    (str "/api"
+     (if (= :create operation)
+       (slash-joined (map name path))
+       (slash-joined (concat (map name path) [(:first object)]))))))
+(defn sync-transaction [tx-data root-cursor]
+  ;; (js* "debugger;;")
+  (let [operation (tx-tag tx-data)
+        object (-> tx-data :tag second)
+        url (operation-url object operation (:path tx-data))]
+    (when (#{:create :update :delete} operation)
+      (json-xhr {:method (operation-methods operation) :url url :data object
+                 :on-complete pr-str
+                 :on-error (comp #(js/alert %) str)}))))
+
 (defn render-root [component state target]
-  (om/root component state {:target target})
+  (om/root component state
+    {:target target
+     :tx-listen sync-transaction})
   ;; setup navigation. See http://closure-library.googlecode.com/git-history/6b23d1e05147f2e80b0d619c5ff78319ab59fd10/closure/goog/demos/html5history.html
   (goog.events/listen ;; when token changes, update view
    hist EventType/NAVIGATE
@@ -66,16 +87,12 @@
     om/IRenderState
     (render-state [this {:keys [delete]}]
       (dom/li nil
-              (dom/a #js {:className "client-loadable"
-                          :href (str "/contact/" (:first contact) "/")
+              (dom/a #js {:href (str "/contact/" (:first contact) "/")
                           :onClick client-load!}
                      (:first contact))
               (dom/button
                #js {:onClick
-                    (fn [e]
-                      (do
-                        (js/alert "delete!")
-                        (put! delete @contact)))}
+                    (fn [e] (put! delete @contact))}
                "Delete")))))
 
 (defn single-contact-view* [contact owner]
@@ -100,7 +117,8 @@
                         parse-contact)]
     (when new-contact
       (do
-       (om/transact! app :contacts #(conj % new-contact))
+       (om/transact! app :contacts #(conj % new-contact)
+                     [:create new-contact])
        (om/set-state! owner :text "")))))
 
 
@@ -119,10 +137,12 @@
         (go (loop []
           (let [contact (<! delete)]
             (om/transact! app :contacts
-              (fn [xs] (vec (remove #(= contact %) xs))))
+              (fn [xs] (vec (remove #(= contact %) xs)))
+              [:delete contact])
             (recur))))))
     om/IRenderState
     (render-state [this {:keys [delete] :as state}]
+      (println (str (:contacts app)))
       (dom/div nil
         (dom/h2 nil "Contact list")
         (apply dom/ul nil
@@ -133,7 +153,8 @@
                           :onChange #(handle-change % owner state)})
           (dom/button #js {:onClick #(add-contact % owner app)} "Add contact"))))))
 
+
 (defn template-string [state component]
   (.renderComponentToString
    js/React
-   (om/build component state)))
+   (om/build component (if (satisfies? IAtom state) @state state))))

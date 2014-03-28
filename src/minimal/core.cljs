@@ -3,11 +3,12 @@
             ;; because otherwise secretary.core/*routes* will be empty
 
             [minimal.views :as views]
+            [minimal.util :refer [browser?]]
             [secretary.core :as secretary]))
 
 
 ;; only run in browser
-(if views/browser?
+(if browser?
   (do
     (.log js/console "starting app")
     (.log js/console (-> js/window .-location .-pathname))

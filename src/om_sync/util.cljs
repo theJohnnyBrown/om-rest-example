@@ -1,9 +1,10 @@
 (ns om-sync.util
-  (:require [cljs.reader :as reader]
-            [goog.events :as events])
+  (:require [goog.events :as events])
   (:import [goog.net XhrIo]
            goog.net.EventType
            [goog.events EventType]))
+
+(enable-console-print!)
 
 (defn popn [n v]
   (loop [n n res v]
@@ -35,10 +36,12 @@
   (let [xhr (XhrIo.)]
     (events/listen xhr goog.net.EventType.SUCCESS
       (fn [e]
-        (on-complete (js->clj (.parse js/JSON (.getResponseText xhr))))))
+        (on-complete (js->clj (.parse js/JSON (.getResponseText xhr))
+                              :keywordize-keys true))))
     (events/listen xhr goog.net.EventType.ERROR
       (fn [e]
         (on-error {:error (.getResponseText xhr)})))
     (. xhr
       (send url (meths method) (when data (.stringify js/JSON (clj->js data)))
-        #js {"Content-Type" "application/json" "Accept" "application/json"}))))
+        #js {"Content-Type" "application/json; charset=utf-8"
+             "Accept" "application/json"}))))
