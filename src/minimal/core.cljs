@@ -1,33 +1,20 @@
 (ns minimal.core
-  (:require [om.core :as om :include-macros true]
-            [om.dom :as dom :include-macros true]
-            [minimal.views :refer [contacts-view contact-view]]
-            [minimal.data :refer [app-state]]))
+  (:require [minimal.routes :as routes]
+            ;; because otherwise secretary.core/*routes* will be empty
 
-(enable-console-print!)
+            [minimal.views :as views]
+            [minimal.util :refer [browser?]]
+            [secretary.core :as secretary]))
 
-
-;; in practice we probably want separate cljsbuild builds for node and browser,
-;; in separate namespaces which are only
-;; compiled for the appropriate environment
-
-(defn browser-main []
-  (om/root
-   (fn [app owner]
-     (dom/h1 nil (:text app)))
-   app-state
-   {:target (. js/document (getElementById "app"))}))
-
-(defn setup-app []
- (om/root contacts-view app-state
-  {:target (.getElementById js/document "app0")}))
 
 ;; only run in browser
-(if (exists? js/document)
+(if browser?
   (do
     (.log js/console "starting app")
-    (setup-app)))
-
-
-;; prevents a nullPointerException type situation when running on node
-(set! *main-cli-fn* (fn [] nil))
+    (.log js/console (-> js/window .-location .-pathname))
+    (.log js/console (str (:state
+                           (secretary/dispatch!
+                            (-> js/window .-location .-pathname)))))
+    (let [{:keys [template state]} (secretary/dispatch!
+                                    (-> js/window .-location .-pathname))]
+      (views/setup-app template state))))

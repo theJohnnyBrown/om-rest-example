@@ -8,7 +8,6 @@ pom.xml
 .lein-repl-history
 .lein-plugins/
 node_modules
-src/minimal/views.clj*
 src/minimal/data.clj*
 main.js
 public/js/app-dev.js

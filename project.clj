@@ -1,6 +1,9 @@
 (defproject minimal "0.1.0-SNAPSHOT"
-  :description "FIXME: write this!"
-  :url "http://example.com/FIXME"
+  :description "An example of DRY client+server templating and routing,
+                using om and secretary"
+  :url "https://github.com/theJohnnyBrown/om-rest-example"
+  :license {:name "Eclipse Public License - v 1.0"
+            :url "http://www.eclipse.org/legal/epl-v10.html"}
 
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [cheshire "5.3.1"]
@@ -11,9 +14,10 @@
                  [liberator "0.9.0"]
                  [ch.qos.logback/logback-classic "1.0.13"]
 
-                 [org.clojure/clojurescript "0.0-2156"]
+                 [org.clojure/clojurescript "0.0-2173"]
                  [org.clojure/core.async "0.1.267.0-0d7780-alpha"]
-                 [om "0.5.0"]]
+                 [om "0.5.0"]
+                 [secretary "1.1.0"]]
 
   :plugins [[lein-npm "0.3.2"]
             [lein-cljsbuild "1.0.2"]
@@ -36,13 +40,14 @@
   :hooks [cljx.hooks]
 
   :node-dependencies [[react "0.9.0"]
-                      [domino "1.0.15"]]
+                      [domino "1.0.15"]
+                      [express "3.4.8"]]
 
   :source-paths ["src"]
 
   :cljsbuild {
     :builds [{:id "node"
-              :source-paths ["src"]
+              :source-paths ["src" "src-node"]
               :compiler {
                 :target :nodejs
                 :output-to "main.js"
