@@ -3,7 +3,7 @@
             [clojure.string :as str]
             [minimal.views :as views]
             [minimal.data :refer [app-state get-contact update-contact
-                                  add-contact]]
+                                  add-contact delete-contact]]
             [minimal.routes :as routes]
             [secretary.core :as secretary]))
 
@@ -24,6 +24,8 @@
     (.setHeader "Content-Type" "application/json")
     (.end (serialize data))))
 
+(defn not-found! [res] (-> res (.status 404) (.end "Not found")))
+
 ; Body parser
 (.use app (.urlencoded express))
 (.use app (.json express))
@@ -40,7 +42,6 @@
         (send-json! res (:contacts @app-state))))
 
 (.put app "/api/contacts/:id/"
-      ;; (.bodyParser express) ;; todo wrap this in js->clj and make reusable
       (fn [req res next]
         (let [body (js->clj (.-body req) :keywordize-keys true)
               result (update-contact body)]
@@ -52,21 +53,33 @@
                result (add-contact body)]
            (send-json! res result))))
 
+(.delete app "/api/contacts/:id/"
+         (fn [req res next]
+           (let [body (js->clj (.-body req) :keywordize-keys true)
+                 ct (get-contact (select-keys body [:first]))]
+             (if ct
+              (do
+                (delete-contact body) (send-json! res ""))
+              (not-found! res)))))
+
+(defn render-html [template state]
+  (str "<html><head>"
+       "<title>minimal react cljx</title></head>"
+       "<body id=\"app0\">"
+       (views/template-string state template)
+       "<script src=\"/js/app-dev.js\"></script> "
+       "</body></html>"))
+
 (.get app "*" (fn [req res next]
                 (.log js/console (.-url req))
                 (.log js/console (.-token req))
-                (.send res
-                       (str "<html><head>"
-                            "<title>minimal react cljx</title></head>"
-                            "<body id=\"app0\">"
-                            (let [{:keys [template state]}
-                                  (secretary/dispatch! (.-url req))
-                                  state-value @state]
-                              (views/template-string state-value template))
-                            "<script src=\"/js/app-dev.js\"></script> "
-                            "</body></html>"))))
+                (let [{:keys [template state] :as view}
+                      (secretary/dispatch! (.-url req))]
+                  (if view
+                    (.send res (render-html template state))
+                    (next)))))
 
-;; (.get app "*" #(.send %2 (views/layout-render views/four-oh-four "404") 404))
+(.get app "*" #(not-found! %2))
 
 (defn -main [& args] (.listen app port))
 

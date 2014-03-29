@@ -35,6 +35,12 @@
                      #(conj % (merge {:email "missing@example.com"} ct))))
   (get-contact ct))
 
+(defn delete-contact [ct]
+  (reset! app-state (update-in @app-state
+                     [:contacts]
+                     (fn [cts]
+                       (vec (remove #(= (:first %) (:first ct)) cts))))))
+
 #+cljs  ;; this is basically an artifact of defining our data in source code
 (if browser?
   (json-xhr
