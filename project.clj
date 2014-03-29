@@ -14,7 +14,7 @@
                  [liberator "0.9.0"]
                  [ch.qos.logback/logback-classic "1.0.13"]
 
-                 [org.clojure/clojurescript "0.0-2173"]
+                 [org.clojure/clojurescript "0.0-2197"]
                  [org.clojure/core.async "0.1.267.0-0d7780-alpha"]
                  [om "0.5.0"]
                  [secretary "1.1.0"]]
@@ -49,6 +49,7 @@
     :builds [{:id "node"
               :source-paths ["src" "src-node"]
               :compiler {
+                :language-in :ecmascript5
                 :target :nodejs
                 :output-to "main.js"
                 :optimizations :simple

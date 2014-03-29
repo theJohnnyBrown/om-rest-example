@@ -5,6 +5,7 @@
             [om.dom :as dom :include-macros true]
             [cljs.core.async :refer [put! chan <!] :as async]
             [minimal.util :refer [browser?]]
+            goog.events
 
             ;; this refers to a fork of om-sync.util
             [om-sync.util :refer [tx-tag json-xhr]]
@@ -51,7 +52,7 @@
      :tx-listen sync-transaction})
   ;; setup navigation. See http://closure-library.googlecode.com/git-history/6b23d1e05147f2e80b0d619c5ff78319ab59fd10/closure/goog/demos/html5history.html
   (goog.events/listen ;; when token changes, update view
-   hist EventType/NAVIGATE
+   hist (.-NAVIGATE EventType)
    #(let [{new-template :template new-state :state}
           (secretary/dispatch! (str "/" (.-token %)))]
       (.log js/console (str "token set to " (.-token %)))
