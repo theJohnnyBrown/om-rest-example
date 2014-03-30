@@ -41,7 +41,8 @@
 
   :node-dependencies [[react "0.9.0"]
                       [domino "1.0.15"]
-                      [express "3.4.8"]]
+                      [express "3.4.8"]
+                      [logfmt "0.20.0"]]
 
   :source-paths ["src"]
 

@@ -10,11 +10,6 @@
 ;; only run in browser
 (if browser?
   (do
-    (.log js/console "starting app")
-    (.log js/console (-> js/window .-location .-pathname))
-    (.log js/console (str (:state
-                           (secretary/dispatch!
-                            (-> js/window .-location .-pathname)))))
     (let [{:keys [template state]} (secretary/dispatch!
                                     (-> js/window .-location .-pathname))]
       (views/setup-app template state))))

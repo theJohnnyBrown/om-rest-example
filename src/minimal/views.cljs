@@ -62,7 +62,6 @@
    hist (.-NAVIGATE EventType)
    #(let [{new-template :template new-state :state}
           (secretary/dispatch! (str "/" (.-token %)))]
-      (.log js/console (str "token set to " (.-token %)))
       (render-root
        new-template new-state
        (.getElementById js/document "app0")))))

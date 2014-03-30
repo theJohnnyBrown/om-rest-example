@@ -4,15 +4,7 @@
             [minimal.data :refer [app-state get-contact]]
             [minimal.views :refer [single-contact-view contacts-view]]))
 
-(enable-console-print!)
+(defroute "/" [] {:state app-state :template contacts-view})
 
-(defroute "/" []
-  (do
-    (.log js/console "index route")
-    {:state app-state :template contacts-view}))
-
-(defroute "/contact/:name/" [name]
-  (do
-    (.log js/console "single contact route")
-    {:template single-contact-view
-     :state (get-contact {:first name})}))
+(defroute "/contact/:name/" [name] {:template single-contact-view
+                                    :state (get-contact {:first name})})

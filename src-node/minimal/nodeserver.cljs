@@ -11,10 +11,14 @@
 (def __dirname (js* "__dirname"))
 
 (def express (nodejs/require "express"))
+(def logfmt (nodejs/require "logfmt"))
 
 (def app (express))
 
 (def port (or (aget nodejs/process "env" "PORT") 3000))
+
+; Logger
+(.use app (.requestLogger logfmt))
 
 (defn serialize [data]
   (->> data clj->js (.stringify js/JSON)))
@@ -55,7 +59,6 @@
 
 (.delete app "/api/contacts/:id/"
          (fn [req res next]
-           (ksdjfh) ;; cause error
            (let [body (js->clj (.-body req) :keywordize-keys true)
                  ct (get-contact (select-keys body [:first]))]
              (if ct
@@ -72,8 +75,6 @@
        "</body></html>"))
 
 (.get app "*" (fn [req res next]
-                (.log js/console (.-url req))
-                (.log js/console (.-token req))
                 (let [{:keys [template state] :as view}
                       (secretary/dispatch! (.-url req))]
                   (if view
