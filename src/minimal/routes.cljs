@@ -6,5 +6,6 @@
 
 (defroute "/" [] {:state app-state :template contacts-view})
 
-(defroute "/contact/:name/" [name] {:template single-contact-view
-                                    :state (get-contact {:first name})})
+(defroute "/contact/:name/" [name]
+  (let [ct (get-contact {:first name})]
+    (if ct {:template single-contact-view :state ct})))

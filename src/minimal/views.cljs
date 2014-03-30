@@ -149,7 +149,6 @@
             (recur))))))
     om/IRenderState
     (render-state [this {:keys [delete] :as state}]
-      (println (str (:contacts app)))
       (dom/div nil
         (dom/h2 nil "Contact list")
         (apply dom/ul nil
