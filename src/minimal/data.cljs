@@ -1,5 +1,5 @@
 (ns minimal.data
-  #+cljs (:require [om-sync.util :refer [json-xhr]]
+  (:require [om-sync.util :refer [json-xhr]]
                    [minimal.util :refer [browser?]]))
 
 (def app-state
@@ -41,7 +41,9 @@
                      (fn [cts]
                        (vec (remove #(= (:first %) (:first ct)) cts))))))
 
-#+cljs  ;; this is basically an artifact of defining our data in source code
+;; this is basically an artifact of defining our data in source code
+;; on the server the data in memory is preserved between requests, but the
+;; client loads the source with the predefined data each time.
 (if browser?
   (json-xhr
    {:url "/api/contacts/" :method :get

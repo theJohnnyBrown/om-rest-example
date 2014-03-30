@@ -21,7 +21,6 @@
 
   :plugins [[lein-npm "0.3.2"]
             [lein-cljsbuild "1.0.2"]
-            [com.keminglabs/cljx "0.3.2"]
             [lein-ring "0.8.8"]]
 
   :ring {
@@ -29,15 +28,6 @@
     :nrepl {:start? true :port 4555}}
 
   :resource-paths ["public" "html"]
-
-  :cljx {:builds [{:source-paths ["src-cljx"]
-                   :output-path "src"
-                   :rules :clj}
-                  {:source-paths ["src-cljx"]
-                   :output-path "src"
-                   :rules :cljs}]}
-
-  :hooks [cljx.hooks]
 
   :node-dependencies [[react "0.9.0"]
                       [domino "1.0.15"]
