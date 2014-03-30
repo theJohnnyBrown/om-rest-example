@@ -55,6 +55,7 @@
 
 (.delete app "/api/contacts/:id/"
          (fn [req res next]
+           (ksdjfh) ;; cause error
            (let [body (js->clj (.-body req) :keywordize-keys true)
                  ct (get-contact (select-keys body [:first]))]
              (if ct

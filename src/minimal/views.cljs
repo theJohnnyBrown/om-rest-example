@@ -29,6 +29,12 @@
 (defn strip-leading-slash [s] (if (= (str (first s)) "/")
                                (str/join (rest s)) s))
 
+(defn rollback-fn [cursor old-state]
+  ;; silently rolls back the state change if an error occurs while syncing
+  ;; need to do more than this, maybe put an error handler in the :tag vector?
+  ;; Could also read the source of om-sync and see how it's handled there.
+  (fn [response] (om/transact! cursor [] (fn [] old-state))))
+
 (def operation-methods {:create :post :update :put :delete :delete})
 (defn operation-url [object operation path]
   (let [slash-joined #(str "/" (str/join "/" %) "/")]
@@ -36,15 +42,16 @@
      (if (= :create operation)
        (slash-joined (map name path))
        (slash-joined (concat (map name path) [(:first object)]))))))
-(defn sync-transaction [tx-data root-cursor]
-  ;; (js* "debugger;;")
+(defn sync-transaction
+  [{:keys [old-state new-state old-value new-value path tag] :as tx-data}
+   root-cursor]
   (let [operation (tx-tag tx-data)
-        object (-> tx-data :tag second)
-        url (operation-url object operation (:path tx-data))]
+        object (second tag)
+        url (operation-url object operation path)]
     (when (#{:create :update :delete} operation)
       (json-xhr {:method (operation-methods operation) :url url :data object
                  :on-complete pr-str
-                 :on-error (comp #(js/alert %) str)}))))
+                 :on-error (rollback-fn root-cursor old-state)}))))
 
 (defn render-root [component state target]
   (om/root component state
