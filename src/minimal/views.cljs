@@ -56,7 +56,9 @@
 (defn render-root [component state target]
   (om/root component state
     {:target target
-     :tx-listen sync-transaction})
+     :tx-listen sync-transaction}))
+
+(defn setup-app [component state]
   ;; setup navigation. See http://closure-library.googlecode.com/git-history/6b23d1e05147f2e80b0d619c5ff78319ab59fd10/closure/goog/demos/html5history.html
   (goog.events/listen ;; when token changes, update view
    hist (.-NAVIGATE EventType)
@@ -64,11 +66,8 @@
           (secretary/dispatch! (str "/" (.-token %)))]
       (render-root
        new-template new-state
-       (.getElementById js/document "app0")))))
-
-(defn setup-app [component state]
-  (do
-    (render-root component state (.getElementById js/document "app0"))))
+       (.getElementById js/document "app0"))))
+  (render-root component state (.getElementById js/document "app0")))
 
 (defn client-load! [e] ;; e should be the click event of an <a>
   (do
